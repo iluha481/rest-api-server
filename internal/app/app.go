@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"net"
@@ -17,6 +18,10 @@ type App struct {
 	authClient *initializers.GrpcClient
 }
 
+var (
+	ErrGracefulShutdown = errors.New("error stoping server")
+)
+
 func New() *App {
 	// creating config and mux
 	config := initializers.NewServerConfig()
@@ -26,7 +31,10 @@ func New() *App {
 		Addr:    net.JoinHostPort(config.Host, config.Port),
 		Handler: mux,
 	}
-	authClient, err := initializers.NewGrpcClient()
+	ctx := context.Background()
+
+	// nil -> logger
+	authClient, err := initializers.NewGrpcClient(ctx, nil, net.JoinHostPort(config.SSO_host, config.SSO_port), config.SSO_timeout, config.SSO_retriesCount)
 	if err != nil {
 		log.Fatal("error creating authClient")
 	}
@@ -56,5 +64,8 @@ func (a *App) Stop() error {
 	if err := a.httpServer.Shutdown(ctx); err != nil {
 		log.Fatalf("Server shutdown failed: %v", err)
 	}
-
+	// closing DB connection
+	//
+	//
+	return nil
 }

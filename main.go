@@ -1,34 +1,26 @@
 package main
 
 import (
-	"context"
-	"fmt"
 	"log"
-	"net"
-	"net/http"
 	"os"
 	"os/signal"
-	"server/initializers"
+	"server/internal/app"
 	"syscall"
-	"time"
 )
 
 func Run() {
-
+	app := app.New()
+	app.MustRun()
 	// graceful shutdown
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 	<-sigChan
 
 	log.Println("Shutting down server...")
-
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	if err := httpServer.Shutdown(ctx); err != nil {
-		log.Fatalf("Server shutdown failed: %v", err)
+	if err := app.Stop(); err != nil {
+		log.Println("Server stopped gracefully")
 	}
-	log.Println("Server stopped gracefully")
+
 }
 
 func main() {

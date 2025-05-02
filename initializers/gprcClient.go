@@ -19,11 +19,6 @@ var (
 	ErrFailedToConnect = errors.New("failed to connect")
 )
 
-const (
-	grpcHost = "localhost"
-	grpcPort = "44044"
-)
-
 type GrpcClient struct {
 	api ssov1.AuthClient
 	log *slog.Logger
