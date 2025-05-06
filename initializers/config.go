@@ -12,7 +12,7 @@ import (
 type ServerConfig struct {
 	Host string
 	Port string
-
+	ConnectionString string
 	SSO_host         string
 	SSO_port         string
 	SSO_timeout      time.Duration
@@ -34,6 +34,7 @@ func NewServerConfig() ServerConfig {
 	return ServerConfig{
 		Host:             os.Getenv("HOST"),
 		Port:             os.Getenv("PORT"),
+		ConnectionString  os.Getenv("ConnectionString"),
 		SSO_host:         os.Getenv("SSO_host"),
 		SSO_port:         os.Getenv("SSO_port"),
 		SSO_timeout:      time.Duration(timeout) * time.Second,

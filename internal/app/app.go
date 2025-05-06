@@ -10,11 +10,15 @@ import (
 	"os"
 	"server/initializers"
 	"time"
-)
 
+	"server/storage"
+)
+// TODO:
+// подумать над структурой
 type App struct {
 	httpServer *http.Server
-	//Storage    *sqlite.Storage
+	storage    *storage.Storage
+	dbConn	   *postgresql.Storage
 	authClient *initializers.GrpcClient
 }
 
@@ -32,6 +36,14 @@ func New() *App {
 		Handler: mux,
 	}
 	ctx := context.Background()
+	
+	db, err := postgresql.New(config.ConnectionString)
+	if err != nil {
+		log.Fatal("error connecting to DB")
+	}
+	// TODO:
+	// nil -> logger
+	storage := storage.New(nil, db, db)
 
 	// nil -> logger
 	authClient, err := initializers.NewGrpcClient(ctx, nil, net.JoinHostPort(config.SSO_host, config.SSO_port), config.SSO_timeout, config.SSO_retriesCount)
@@ -41,6 +53,8 @@ func New() *App {
 
 	return &App{
 		httpServer: httpServer,
+		dbConn:		db,
+		storage: storage,
 		authClient: authClient,
 	}
 }
@@ -64,8 +78,10 @@ func (a *App) Stop() error {
 	if err := a.httpServer.Shutdown(ctx); err != nil {
 		log.Fatalf("Server shutdown failed: %v", err)
 	}
-	// closing DB connection
-	//
-	//
+	
+	if err := a.dbConn.Stop(); err != nil {
+		log.Fatalf("DB connection closing failed: %v", err)
+	}
+
 	return nil
 }
