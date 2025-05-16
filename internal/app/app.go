@@ -9,16 +9,19 @@ import (
 	"net/http"
 	"os"
 	"server/initializers"
+	"server/internal/storage"
+	"server/internal/storage/postgresql"
 	"time"
 
-	"server/storage"
+	_ "github.com/lib/pq"
 )
+
 // TODO:
 // подумать над структурой
 type App struct {
 	httpServer *http.Server
 	storage    *storage.Storage
-	dbConn	   *postgresql.Storage
+	dbConn     *postgresql.Storage
 	authClient *initializers.GrpcClient
 }
 
@@ -36,10 +39,10 @@ func New() *App {
 		Handler: mux,
 	}
 	ctx := context.Background()
-	
+
 	db, err := postgresql.New(config.ConnectionString)
 	if err != nil {
-		log.Fatal("error connecting to DB")
+		log.Fatal("error connecting to DB", err)
 	}
 	// TODO:
 	// nil -> logger
@@ -53,8 +56,8 @@ func New() *App {
 
 	return &App{
 		httpServer: httpServer,
-		dbConn:		db,
-		storage: storage,
+		dbConn:     db,
+		storage:    storage,
 		authClient: authClient,
 	}
 }
@@ -78,7 +81,7 @@ func (a *App) Stop() error {
 	if err := a.httpServer.Shutdown(ctx); err != nil {
 		log.Fatalf("Server shutdown failed: %v", err)
 	}
-	
+
 	if err := a.dbConn.Stop(); err != nil {
 		log.Fatalf("DB connection closing failed: %v", err)
 	}

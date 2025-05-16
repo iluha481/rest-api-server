@@ -1,7 +1,10 @@
 package storage
 
 import (
+	"context"
+	"errors"
 	"log/slog"
+	"server/internal/domain/models"
 )
 
 type UserProvider interface {
@@ -13,20 +16,25 @@ type AppProvider interface {
 }
 
 type Storage struct {
-	log 			*slog.Logger
-	userProvider 	UserProvider
-	appProvider 	AppProvider
-
+	log          *slog.Logger
+	userProvider UserProvider
+	appProvider  AppProvider
 }
 
+var (
+	ErrUserExists   = errors.New("user already exists")
+	ErrUserNotFound = errors.New("user not found")
+	ErrAppNotFound  = errors.New("app not foud")
+)
+
 func New(
-	log 			*slog.Logger, 
-	userProvider 	UserProvider, 
-	appProvider 	AppProvider) *Storage {
-	return &Storage {
-		log: 			log,
-		userProvider: 	userProvider,
-		appProvider: 	appProvider
-	} 
+	log *slog.Logger,
+	userProvider UserProvider,
+	appProvider AppProvider) *Storage {
+	return &Storage{
+		log:          log,
+		userProvider: userProvider,
+		appProvider:  appProvider,
+	}
 
 }
