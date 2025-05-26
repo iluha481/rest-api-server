@@ -17,6 +17,7 @@ type ServerConfig struct {
 	SSO_port         string
 	SSO_timeout      time.Duration
 	SSO_retriesCount int
+	Env              string
 }
 
 func NewServerConfig() ServerConfig {
@@ -35,9 +36,10 @@ func NewServerConfig() ServerConfig {
 		Host:             os.Getenv("HOST"),
 		Port:             os.Getenv("PORT"),
 		ConnectionString: os.Getenv("ConnectionString"),
-		SSO_host:         os.Getenv("SSO_host"),
-		SSO_port:         os.Getenv("SSO_port"),
+		SSO_host:         os.Getenv("SSO_HOST"),
+		SSO_port:         os.Getenv("SSO_PORT"),
 		SSO_timeout:      time.Duration(timeout) * time.Second,
 		SSO_retriesCount: retries,
+		Env:              os.Getenv("ENV"),
 	}
 }

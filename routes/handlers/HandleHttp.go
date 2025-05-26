@@ -10,6 +10,6 @@ func HandleHttp() http.Handler {
 		func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(200)
 			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode("asda")
+			json.NewEncoder(w).Encode("pong")
 		})
 }

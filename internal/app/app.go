@@ -5,12 +5,15 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"log/slog"
 	"net"
 	"net/http"
 	"os"
+
 	"server/initializers"
 	"server/internal/storage"
 	"server/internal/storage/postgresql"
+	"server/routes"
 	"time"
 
 	_ "github.com/lib/pq"
@@ -29,37 +32,76 @@ var (
 	ErrGracefulShutdown = errors.New("error stoping server")
 )
 
+const (
+	envLocal = "local"
+	envDev   = "dev"
+	envProd  = "prod"
+)
+
+func NewMux(
+	config initializers.ServerConfig,
+	storage *storage.Storage,
+	authClient *initializers.GrpcClient,
+) http.Handler {
+
+	mux := http.NewServeMux()
+	routes.AddRoutes(mux, config, storage, authClient)
+
+	return mux
+}
+
 func New() *App {
 	// creating config and mux
 	config := initializers.NewServerConfig()
-	mux := initializers.NewServer(config)
 	// creating server
-	httpServer := &http.Server{
-		Addr:    net.JoinHostPort(config.Host, config.Port),
-		Handler: mux,
-	}
+
 	ctx := context.Background()
 
 	db, err := postgresql.New(config.ConnectionString)
 	if err != nil {
 		log.Fatal("error connecting to DB", err)
 	}
-	// TODO:
-	// nil -> logger
-	storage := storage.New(nil, db, db)
+	slog := setupLogger(config.Env)
 
-	// nil -> logger
-	authClient, err := initializers.NewGrpcClient(ctx, nil, net.JoinHostPort(config.SSO_host, config.SSO_port), config.SSO_timeout, config.SSO_retriesCount)
+	storage := storage.New(slog, db, db)
+
+	authClient, err := initializers.NewGrpcClient(ctx, slog, net.JoinHostPort(config.SSO_host, config.SSO_port), config.SSO_timeout, config.SSO_retriesCount)
+
 	if err != nil {
 		log.Fatal("error creating authClient")
 	}
-
+	mux := NewMux(config, storage, authClient)
+	httpServer := &http.Server{
+		Addr:    net.JoinHostPort(config.Host, config.Port),
+		Handler: mux,
+	}
 	return &App{
 		httpServer: httpServer,
 		dbConn:     db,
 		storage:    storage,
 		authClient: authClient,
 	}
+}
+
+func setupLogger(env string) *slog.Logger {
+	var log *slog.Logger
+
+	switch env {
+	case envLocal:
+		log = slog.New(
+			slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}),
+		)
+	case envDev:
+		log = slog.New(
+			slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}),
+		)
+	case envProd:
+		log = slog.New(
+			slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}),
+		)
+
+	}
+	return log
 }
 
 func (a *App) MustRun() {

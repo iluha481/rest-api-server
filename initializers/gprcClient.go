@@ -20,7 +20,7 @@ var (
 )
 
 type GrpcClient struct {
-	api ssov1.AuthClient
+	Api ssov1.AuthClient
 	log *slog.Logger
 }
 
@@ -48,6 +48,7 @@ func NewGrpcClient(
 	// Создаём соединение с gRPC-сервером SSO для клиента
 	cc, err := grpc.DialContext(ctx, addr,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithBlock(),
 		grpc.WithChainUnaryInterceptor(
 			grpclog.UnaryClientInterceptor(InterceptorLogger(log), logOpts...),
 			grpcretry.UnaryClientInterceptor(retryOpts...),
@@ -60,7 +61,8 @@ func NewGrpcClient(
 	grpcClient := ssov1.NewAuthClient(cc)
 
 	return &GrpcClient{
-		api: grpcClient,
+		Api: grpcClient,
+		log: log,
 	}, nil
 }
 
