@@ -3,6 +3,7 @@ module server
 go 1.24.0
 
 require (
+	github.com/brianvoe/gofakeit/v6 v6.28.0
 	github.com/golang-jwt/jwt/v5 v5.2.2
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.3.1
 	github.com/iluha481/protos v0.0.0-20250402193458-2f08378a5127

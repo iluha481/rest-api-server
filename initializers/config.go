@@ -18,6 +18,7 @@ type ServerConfig struct {
 	SSO_timeout      time.Duration
 	SSO_retriesCount int
 	Env              string
+	TokenTTL         time.Duration
 }
 
 func NewServerConfig() ServerConfig {
@@ -41,5 +42,6 @@ func NewServerConfig() ServerConfig {
 		SSO_timeout:      time.Duration(timeout) * time.Second,
 		SSO_retriesCount: retries,
 		Env:              os.Getenv("ENV"),
+		TokenTTL:         1 * time.Hour,
 	}
 }

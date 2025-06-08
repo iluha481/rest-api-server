@@ -16,4 +16,5 @@ func AddRoutes(
 ) {
 	mux.Handle("/ping", middlewares.LoggingMiddleware(handlers.HandleHttp()))
 	mux.Handle("/api/register", middlewares.LoggingMiddleware(handlers.HandleRegiser(authClient)))
+	mux.Handle("/api/login", middlewares.LoggingMiddleware(handlers.HandleLogin(config, authClient)))
 }
